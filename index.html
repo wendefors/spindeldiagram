@@ -430,6 +430,17 @@
       return lines;
     }
 
+    function hexToRgba(hex, alpha) {
+      const cleanHex = hex.replace('#', '');
+      const fullHex = cleanHex.length === 3
+        ? cleanHex.split('').map((c) => c + c).join('')
+        : cleanHex;
+      const r = parseInt(fullHex.slice(0, 2), 16);
+      const g = parseInt(fullHex.slice(2, 4), 16);
+      const b = parseInt(fullHex.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
     const categoryRingPlugin = {
       id: 'categoryRing',
       afterDraw(chart, args, options) {
@@ -448,6 +459,7 @@
         const angleOffset = -Math.PI / 2;
         const ringInner = scale.drawingArea + 8;
         const ringOuter = ringInner + 24;
+        const sectorOuter = scale.drawingArea;
         const labelRadius = ringOuter + 20;
         const labelLineHeight = 14;
 
@@ -479,10 +491,36 @@
         ctx.save();
         ctx.globalCompositeOperation = 'destination-over';
 
+        // Draw separators first while in destination-over mode, so they stay visible
+        // on top of category fills/rings but still behind the chart content.
+        const separatorAngles = new Set();
+        categories.forEach((category) => {
+          separatorAngles.add((category.startIndex - 0.5).toFixed(3));
+          separatorAngles.add((category.endIndex + 0.5).toFixed(3));
+        });
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.lineWidth = 5;
+        separatorAngles.forEach((indexValue) => {
+          const angle = angleOffset + (Number(indexValue) * angleStep);
+          const x = centerX + Math.cos(angle) * ringOuter;
+          const y = centerY + Math.sin(angle) * ringOuter;
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+        });
+
         categories.forEach((category) => {
           const startAngle = angleOffset + ((category.startIndex - 0.5) * angleStep);
           const endAngle = angleOffset + ((category.endIndex + 0.5) * angleStep);
-          const midAngle = (startAngle + endAngle) / 2;
+
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          ctx.arc(centerX, centerY, sectorOuter, startAngle, endAngle);
+          ctx.closePath();
+          ctx.fillStyle = hexToRgba(category.color, 0.12);
+          ctx.fill();
 
           ctx.beginPath();
           ctx.arc(centerX, centerY, ringOuter, startAngle, endAngle);
