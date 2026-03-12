@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Digitaliseringstransformation</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -24,6 +24,19 @@
 
     /* Gör att padding/border räknas in i elementens totala bredd/höjd. */
     * { box-sizing: border-box; }
+
+    /* Hjälpklass för text som ska vara tillgänglig men inte synas visuellt. */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
 
     /* Grundlayout för sidan. */
     body {
@@ -442,9 +455,7 @@
         <img
           class="logo-img"
           src="./xlent-logo.png"
-          alt="XLENT"
-          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"
-        />
+          alt="XLENT">
         <span class="logo-fallback">XLENT</span>
       </div>
       <div class="brand-bar"></div>
@@ -452,7 +463,7 @@
       <h1 class="title">Digitaliseringstransformation</h1>
       <p class="description">Ange kundnamn för att starta självskattningen. Namnet visas i resultatet och i PDF-exporten.</p>
       <label class="input-label" for="customerNameInput">Kundnamn</label>
-      <input class="text-input" id="customerNameInput" type="text" autocomplete="organization" placeholder="Exempel: Kund AB" />
+      <input class="text-input" id="customerNameInput" type="text" autocomplete="organization" placeholder="Exempel: Kund AB">
       <div class="actions">
         <button class="btn btn-accent" id="startBtn" type="button">Starta</button>
       </div>
@@ -464,9 +475,7 @@
         <img
           class="logo-img"
           src="./xlent-logo.png"
-          alt="XLENT"
-          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"
-        />
+          alt="XLENT">
         <span class="logo-fallback">XLENT</span>
       </div>
       <div class="brand-bar"></div>
@@ -476,7 +485,7 @@
           <div class="progress-fill" id="progressFill"></div>
         </div>
       </div>
-      <h1 class="title" id="areaTitle"></h1>
+      <h1 class="title" id="areaTitle"><span class="sr-only">Aktuell fråga</span></h1>
       <p class="description" id="areaDescription"></p>
 
       <div class="score-grid" id="scoreGrid"></div>
@@ -493,9 +502,7 @@
         <img
           class="logo-img"
           src="./xlent-logo.png"
-          alt="XLENT"
-          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"
-        />
+          alt="XLENT">
         <span class="logo-fallback">XLENT</span>
       </div>
       <div class="brand-bar"></div>
@@ -796,6 +803,7 @@
     function init() {
       createScoreButtons();
       bindEvents();
+      bindLogoFallbacks();
     }
 
     // Skapar knapparna 1-10 en gång och kopplar varje knapp till selectScore.
@@ -821,6 +829,18 @@
       backBtn.addEventListener('click', goBack);
       pdfBtn.addEventListener('click', downloadPdf);
       restartBtn.addEventListener('click', restart);
+    }
+
+    // Hanterar fallback-text om loggafilen saknas eller inte kan laddas.
+    function bindLogoFallbacks() {
+      const logoImages = document.querySelectorAll('.logo-img');
+      logoImages.forEach((logoImage) => {
+        logoImage.addEventListener('error', () => {
+          logoImage.style.display = 'none';
+          const fallback = logoImage.nextElementSibling;
+          if (fallback) fallback.style.display = 'inline';
+        });
+      });
     }
 
     // Validerar kundnamn och går från introvyn till första frågan.
