@@ -436,12 +436,16 @@
       .title {
         font-size: clamp(1.35rem, 7vw, 1.9rem);
         line-height: 1.15;
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
+        word-break: normal;
+        hyphens: auto;
       }
       #areaTitle { padding-right: 70px; }
       .summary-category-name,
       .summary-subname {
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
+        word-break: normal;
+        hyphens: auto;
       }
       .score-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .chart-panel {
@@ -659,20 +663,30 @@
           ctx.fillStyle = '#1E2022';
           ctx.font = isMobile ? '700 10px Arial' : '700 11px Arial';
           ctx.textBaseline = 'middle';
+          const textPadding = 6;
+          const maxLineWidth = Math.max(...lines.map((line) => ctx.measureText(line).width));
 
           // Justera textankare beroende på var runt cirkeln etiketten hamnar.
           const cosine = Math.cos(angle);
+          let drawX = x;
           if (cosine > 0.32) {
             ctx.textAlign = 'left';
+            drawX = Math.max(textPadding, Math.min(width - maxLineWidth - textPadding, x));
           } else if (cosine < -0.32) {
             ctx.textAlign = 'right';
+            drawX = Math.max(maxLineWidth + textPadding, Math.min(width - textPadding, x));
           } else {
             ctx.textAlign = 'center';
+            drawX = Math.max((maxLineWidth / 2) + textPadding, Math.min(width - (maxLineWidth / 2) - textPadding, x));
           }
 
+          const minCenterY = (textBlockHeight / 2) + textPadding;
+          const maxCenterY = height - (textBlockHeight / 2) - textPadding;
+          const drawY = Math.max(minCenterY, Math.min(maxCenterY, y));
+
           lines.forEach((line, index) => {
-            const lineY = y - (textBlockHeight / 2) + (index * labelLineHeight) + (labelLineHeight / 2);
-            ctx.fillText(line, x, lineY);
+            const lineY = drawY - (textBlockHeight / 2) + (index * labelLineHeight) + (labelLineHeight / 2);
+            ctx.fillText(line, drawX, lineY);
           });
         };
 
