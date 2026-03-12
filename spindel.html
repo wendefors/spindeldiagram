@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digitaliseringstransformation</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --xlent-yellow: #ffb300;
+      --sage: #A3B6B4;
+      --forest: #526664;
+      --stone: #64666A;
+      --ink: #1E2022;
+      --mist: #F0F2EF;
+      --white: #ffffff;
+      --shadow: 0 20px 60px rgba(30, 32, 34, 0.10);
+      --radius-lg: 24px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(163, 182, 180, 0.22), transparent 32%),
+        linear-gradient(180deg, #ffffff 0%, #F0F2EF 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 760px;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      border: 1px solid rgba(82, 102, 100, 0.10);
+    }
+
+    .brand-bar {
+      width: 72px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--xlent-yellow);
+      margin-bottom: 24px;
+    }
+
+    .step-label {
+      font-size: 0.95rem;
+      color: var(--stone);
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .title {
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      line-height: 1.1;
+      margin: 0 0 10px;
+    }
+
+    .description {
+      margin: 0 0 28px;
+      color: var(--stone);
+      line-height: 1.5;
+      max-width: none;
+    }
+
+    .progress-wrap {
+      margin-bottom: 28px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--mist);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--forest), var(--xlent-yellow));
+      border-radius: 999px;
+      transition: width 220ms ease;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0 8px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--stone);
+      margin-bottom: 8px;
+    }
+
+    .text-input {
+      width: 100%;
+      border: 1px solid rgba(82, 102, 100, 0.25);
+      border-radius: var(--radius-md);
+      min-height: 52px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      color: var(--ink);
+      margin-bottom: 14px;
+    }
+
+    .text-input:focus {
+      outline: none;
+      border-color: var(--forest);
+      box-shadow: 0 0 0 3px rgba(163, 182, 180, 0.35);
+    }
+
+    .score-btn {
+      appearance: none;
+      border: 1px solid rgba(82, 102, 100, 0.20);
+      background: var(--white);
+      color: var(--ink);
+      border-radius: var(--radius-md);
+      min-height: 56px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 160ms ease;
+    }
+
+    .score-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--forest);
+      box-shadow: 0 8px 20px rgba(82, 102, 100, 0.10);
+    }
+
+    .score-btn.selected {
+      background: var(--xlent-yellow);
+      border-color: var(--xlent-yellow);
+      color: var(--ink);
+    }
+
+    .selected-score {
+      min-height: 24px;
+      margin-top: 14px;
+      font-weight: 700;
+      color: var(--forest);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 22px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: var(--mist);
+      color: var(--ink);
+    }
+
+    .btn-primary {
+      background: var(--ink);
+      color: var(--white);
+      box-shadow: 0 12px 24px rgba(30, 32, 34, 0.18);
+    }
+
+    .btn-accent {
+      background: var(--xlent-yellow);
+      color: var(--ink);
+      box-shadow: 0 12px 24px rgba(255, 179, 0, 0.28);
+    }
+
+    .hidden { display: none; }
+
+    .result-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .chart-panel {
+      background: linear-gradient(180deg, rgba(240, 242, 239, 0.55), rgba(255,255,255,1));
+      border: 1px solid rgba(82, 102, 100, 0.12);
+      border-radius: 22px;
+      padding: 28px;
+      min-height: 560px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+    }
+
+    .summary-panel {
+      background: var(--mist);
+      border-radius: 22px;
+      padding: 22px;
+      width: 100%;
+    }
+
+    .summary-title {
+      margin: 0 0 16px;
+      font-size: 1.15rem;
+    }
+
+    .result-customer {
+      margin: 0 0 20px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--forest);
+    }
+
+    .summary-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .summary-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--white);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+
+    .summary-name {
+      font-weight: 700;
+      line-height: 1.3;
+      font-size: 0.95rem;
+    }
+
+    .summary-value {
+      min-width: 48px;
+      text-align: center;
+      background: var(--xlent-yellow);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .restart-wrap .btn {
+      font-size: 0.9rem;
+      padding: 12px 18px;
+    }
+
+    .restart-wrap {
+      margin-top: 28px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    @media (min-width: 1024px) {
+      .app-shell { max-width: 980px; }
+    }
+
+    @media (max-width: 720px) {
+      .card { padding: 24px; }
+      .score-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .chart-panel {
+        min-height: 360px;
+        padding: 16px;
+      }
+      .actions { flex-direction: column-reverse; }
+      .actions .btn { width: 100%; }
+      .restart-wrap {
+        justify-content: stretch;
+        flex-direction: column;
+      }
+      .restart-wrap .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="card" id="introView">
+      <div class="brand-bar"></div>
+      <div class="step-label">Förberedelse</div>
+      <h1 class="title">Digitaliseringstransformation</h1>
+      <p class="description">Ange kundnamn för att starta självskattningen. Namnet visas i resultatet och i PDF-exporten.</p>
+      <label class="input-label" for="customerNameInput">Kundnamn</label>
+      <input class="text-input" id="customerNameInput" type="text" autocomplete="organization" placeholder="Exempel: Kund AB" />
+      <div class="actions">
+        <button class="btn btn-accent" id="startBtn" type="button">Starta</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="wizardView">
+      <div class="brand-bar"></div>
+      <div class="step-label" id="stepLabel">Steg 1 av 9</div>
+      <div class="progress-wrap">
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+      <h1 class="title" id="areaTitle"></h1>
+      <p class="description" id="areaDescription"></p>
+
+      <div class="score-grid" id="scoreGrid"></div>
+      <div class="selected-score" id="selectedScore">Inget värde valt ännu.</div>
+
+      <div class="actions">
+        <button class="btn btn-secondary" id="backBtn" type="button">Tillbaka</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="resultView">
+      <div class="brand-bar"></div>
+      <div class="step-label">Resultat</div>
+      <h1 class="title">Digitaliseringstransformation</h1>
+      <p class="description">Här ser du sammanställningen av dina val, både som diagram och som tydliga poäng per område.</p>
+      <p class="result-customer" id="resultCustomer"></p>
+
+      <div class="result-layout">
+        <div class="chart-panel">
+          <canvas id="radarChart" aria-label="Spindeldiagram" role="img"></canvas>
+        </div>
+        <aside class="summary-panel">
+          <h2 class="summary-title">Valda värden</h2>
+          <ul class="summary-list" id="summaryList"></ul>
+        </aside>
+      </div>
+
+      <div class="restart-wrap">
+        <button class="btn btn-secondary" id="pdfBtn" type="button">Ladda ner som PDF</button>
+        <button class="btn btn-accent" id="restartBtn" type="button">Börja om</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const AUTO_ADVANCE_DELAY_MS = 500;
+
+    const areas = [
+      'Strategisk tydlighet',
+      'Samstämmigt ledarskap',
+      'Tvärfunktionell samverkan',
+      'Arbetssätt och beslutsflöden',
+      'Digital kompetens',
+      'Systemanvändning och nyttjandegrad',
+      'Kundvärde och affärsnytta',
+      'Förändringsledningsförmåga',
+      'Transformationsvana'
+    ];
+    const categoryGroups = [
+      {
+        name: 'Strategisk inriktning',
+        startIndex: 0,
+        endIndex: 1,
+        color: '#526664'
+      },
+      {
+        name: 'Organisatorisk samverkan',
+        startIndex: 2,
+        endIndex: 3,
+        color: '#A3B6B4'
+      },
+      {
+        name: 'Digital och operativ förmåga',
+        startIndex: 4,
+        endIndex: 6,
+        color: '#ffb300'
+      },
+      {
+        name: 'Transformationsförmåga',
+        startIndex: 7,
+        endIndex: 8,
+        color: '#64666A'
+      }
+    ];
+
+    function wrapText(text, maxCharsPerLine = 20) {
+      const words = text.split(' ');
+      const lines = [];
+      let current = '';
+
+      words.forEach((word) => {
+        const candidate = current ? `${current} ${word}` : word;
+        if (candidate.length <= maxCharsPerLine) {
+          current = candidate;
+        } else {
+          if (current) lines.push(current);
+          current = word;
+        }
+      });
+
+      if (current) lines.push(current);
+      return lines;
+    }
+
+    const categoryRingPlugin = {
+      id: 'categoryRing',
+      afterDraw(chart, args, options) {
+        if (!options || !options.enabled) return;
+
+        const scale = chart.scales.r;
+        const labels = chart.data.labels || [];
+        const categories = options.categories || [];
+        const pointCount = labels.length;
+        if (!scale || !pointCount || !categories.length) return;
+
+        const { ctx, width, height } = chart;
+        const centerX = scale.xCenter;
+        const centerY = scale.yCenter;
+        const angleStep = (Math.PI * 2) / pointCount;
+        const angleOffset = -Math.PI / 2;
+        const ringInner = scale.drawingArea + 8;
+        const ringOuter = ringInner + 24;
+        const labelRadius = ringOuter + 20;
+        const labelLineHeight = 14;
+
+        const drawLabel = (text, angle) => {
+          const x = centerX + Math.cos(angle) * labelRadius;
+          const y = centerY + Math.sin(angle) * labelRadius;
+          const lines = wrapText(text, 18);
+          const textBlockHeight = lines.length * labelLineHeight;
+
+          ctx.fillStyle = '#1E2022';
+          ctx.font = '700 11px Arial';
+          ctx.textBaseline = 'middle';
+
+          const cosine = Math.cos(angle);
+          if (cosine > 0.32) {
+            ctx.textAlign = 'left';
+          } else if (cosine < -0.32) {
+            ctx.textAlign = 'right';
+          } else {
+            ctx.textAlign = 'center';
+          }
+
+          lines.forEach((line, index) => {
+            const lineY = y - (textBlockHeight / 2) + (index * labelLineHeight) + (labelLineHeight / 2);
+            ctx.fillText(line, x, lineY);
+          });
+        };
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-over';
+
+        categories.forEach((category) => {
+          const startAngle = angleOffset + ((category.startIndex - 0.5) * angleStep);
+          const endAngle = angleOffset + ((category.endIndex + 0.5) * angleStep);
+          const midAngle = (startAngle + endAngle) / 2;
+
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, ringOuter, startAngle, endAngle);
+          ctx.arc(centerX, centerY, ringInner, endAngle, startAngle, true);
+          ctx.closePath();
+          ctx.fillStyle = category.color;
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        });
+
+        ctx.restore();
+
+        ctx.save();
+        categories.forEach((category) => {
+          const startAngle = angleOffset + ((category.startIndex - 0.5) * angleStep);
+          const endAngle = angleOffset + ((category.endIndex + 0.5) * angleStep);
+          const midAngle = (startAngle + endAngle) / 2;
+          drawLabel(category.name, midAngle);
+        });
+        ctx.restore();
+      }
+    };
+    const areaDescriptions = [
+      {
+        question: 'Tydlig affärsstrategi för digitalisering, AI och systemförändringar.',
+        low: 'Ingen tydlig riktning. Digitalisering och AI drivs ad hoc utan prioriterad plan eller koppling till affärsmål.',
+        high: 'Tydlig och förankrad strategi där digitalisering, AI och systemförändringar är kopplade till affärsmål med tydliga prioriteringar.'
+      },
+      {
+        question: 'Samstämmighet i ledningen kring riktning, prioriteringar och förändringsagenda.',
+        low: 'Ledningen drar åt olika håll. Otydliga prioriteringar skapar osäkerhet, långsamma beslut och svagt genomförande.',
+        high: 'Ledningen är enad kring riktning och prioriteringar, kommunicerar samma budskap och fattar snabba, samordnade beslut.'
+      },
+      {
+        question: 'Grad av samverkan mellan affär, IT, marknad, operations och andra funktioner.',
+        low: 'Arbetet sker i silos med låg samverkan mellan funktioner, vilket skapar friktion, dubbelarbete och suboptimering.',
+        high: 'Hög tvärfunktionell samverkan med gemensamma mål, tydliga gränssnitt och effektiv koordinering mellan funktioner.'
+      },
+      {
+        question: 'Arbetssätt, processer och beslutsflöden som stödjer förändring och utveckling.',
+        low: 'Tröga processer och otydliga beslutsvägar bromsar utveckling, lärande och förmågan att snabbt ställa om.',
+        high: 'Smidiga arbetssätt, tydliga processer och effektiva beslutsflöden som möjliggör snabb utveckling och kontinuerlig förbättring.'
+      },
+      {
+        question: 'Organisationens förståelse för data, digitalisering, AI och nya verktyg.',
+        low: 'Låg förståelse för digitalisering, data och AI. Kompetensluckor begränsar förmågan att driva och ta hem nytta.',
+        high: 'Hög och bred digital kompetens med god förståelse för data, AI och verktyg som används aktivt i verksamheten.'
+      },
+      {
+        question: 'I vilken grad befintliga system faktiskt används och skapar värde i vardagen.',
+        low: 'Systemen används begränsat eller felaktigt, med låg acceptans och liten påverkan på produktivitet och kvalitet.',
+        high: 'Systemen används konsekvent och effektivt i vardagen, med tydlig nytta i processer, kvalitet och resultat.'
+      },
+      {
+        question: 'Hur väl digitala initiativ omsätts i konkret kundnytta och affärsvärde.',
+        low: 'Digitala initiativ ger begränsad effekt för kund och affär, med svag koppling till mätbar nytta och resultat.',
+        high: 'Digitala initiativ omsätts tydligt i bättre kundupplevelse, högre värdeskapande och mätbar affärsnytta.'
+      },
+      {
+        question: 'Organisationens kompetens att leda förändring och förflytta beteenden.',
+        low: 'Svag förändringsledning med låg förmåga att skapa engagemang, hantera motstånd och etablera nya beteenden.',
+        high: 'Stark förändringsledningsförmåga som skapar tydlighet, delaktighet och varaktig beteendeförflyttning.'
+      },
+      {
+        question: 'Tidigare erfarenhet av att genomföra större förändrings- och transformationsinitiativ.',
+        low: 'Begränsad erfarenhet av större transformationer, med få etablerade metoder för att planera, driva och skala förändring.',
+        high: 'Gedigen transformationsvana med dokumenterad förmåga att genomföra komplexa initiativ från plan till realiserad effekt.'
+      }
+    ];
+
+    const state = {
+      customerName: '',
+      currentStep: 0,
+      scores: new Array(areas.length).fill(null)
+    };
+
+    const introView = document.getElementById('introView');
+    const wizardView = document.getElementById('wizardView');
+    const resultView = document.getElementById('resultView');
+    const customerNameInput = document.getElementById('customerNameInput');
+    const startBtn = document.getElementById('startBtn');
+    const areaTitle = document.getElementById('areaTitle');
+    const areaDescription = document.getElementById('areaDescription');
+    const stepLabel = document.getElementById('stepLabel');
+    const progressFill = document.getElementById('progressFill');
+    const scoreGrid = document.getElementById('scoreGrid');
+    const selectedScore = document.getElementById('selectedScore');
+    const backBtn = document.getElementById('backBtn');
+    const pdfBtn = document.getElementById('pdfBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const summaryList = document.getElementById('summaryList');
+    const resultCustomer = document.getElementById('resultCustomer');
+
+    let radarChart;
+
+    function init() {
+      createScoreButtons();
+      bindEvents();
+      renderStep();
+    }
+
+    function createScoreButtons() {
+      scoreGrid.innerHTML = '';
+      for (let score = 1; score <= 10; score++) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'score-btn';
+        button.textContent = score;
+        button.dataset.score = score;
+        button.addEventListener('click', () => selectScore(score));
+        scoreGrid.appendChild(button);
+      }
+    }
+
+    function bindEvents() {
+      startBtn.addEventListener('click', startAssessment);
+      customerNameInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') startAssessment();
+      });
+      backBtn.addEventListener('click', goBack);
+      pdfBtn.addEventListener('click', downloadPdf);
+      restartBtn.addEventListener('click', restart);
+    }
+
+    function startAssessment() {
+      const name = customerNameInput.value.trim();
+      if (!name) {
+        alert('Fyll i kundnamn för att starta.');
+        customerNameInput.focus();
+        return;
+      }
+
+      state.customerName = name;
+      state.currentStep = 0;
+      introView.classList.add('hidden');
+      wizardView.classList.remove('hidden');
+      resultView.classList.add('hidden');
+      renderStep();
+    }
+
+    function selectScore(score) {
+      state.scores[state.currentStep] = score;
+      updateScoreSelection();
+      setTimeout(goNext, AUTO_ADVANCE_DELAY_MS);
+    }
+
+    function renderStep() {
+      const currentArea = areas[state.currentStep];
+      const currentDescription = areaDescriptions[state.currentStep];
+      areaTitle.textContent = currentArea;
+      areaDescription.innerHTML =
+        `${currentDescription.question}<br><br>` +
+        `1 = ${currentDescription.low}<br>` +
+        `10 = ${currentDescription.high}`;
+      stepLabel.textContent = `Steg ${state.currentStep + 1} av ${areas.length}`;
+      progressFill.style.width = `${((state.currentStep + 1) / areas.length) * 100}%`;
+
+      updateScoreSelection();
+      updateNavigationButtons();
+    }
+
+    function updateScoreSelection() {
+      const selectedValue = state.scores[state.currentStep];
+      const buttons = scoreGrid.querySelectorAll('.score-btn');
+
+      buttons.forEach((button) => {
+        const isSelected = Number(button.dataset.score) === selectedValue;
+        button.classList.toggle('selected', isSelected);
+      });
+
+      selectedScore.textContent = selectedValue
+        ? `Valt värde: ${selectedValue}`
+        : 'Inget värde valt ännu.';
+    }
+
+    function updateNavigationButtons() {
+      backBtn.disabled = state.currentStep === 0;
+    }
+
+    function goBack() {
+      if (state.currentStep > 0) {
+        state.currentStep -= 1;
+        renderStep();
+      }
+    }
+
+    function goNext() {
+      if (state.scores[state.currentStep] === null) return;
+
+      if (state.currentStep < areas.length - 1) {
+        state.currentStep += 1;
+        renderStep();
+      } else {
+        showResults();
+      }
+    }
+
+    function downloadPdf() {
+      if (state.scores.some((score) => score === null)) {
+        alert('Sätt ett värde för alla områden innan du laddar ner PDF.');
+        return;
+      }
+
+      renderSummary();
+      renderChart();
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('PDF-biblioteket kunde inte laddas.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 46;
+      let y = margin;
+      const safeCustomerName = (state.customerName || 'kund')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 48) || 'kund';
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(20);
+      doc.text('Spindeldiagram – Digitalisering', margin, y);
+      y += 24;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      const now = new Date();
+      const timestamp = now.toLocaleString('sv-SE');
+      doc.text(`Kund: ${state.customerName}`, margin, y);
+      y += 18;
+      doc.text(`Genererad: ${timestamp}`, margin, y);
+      y += 24;
+
+      const chartCanvas = document.getElementById('radarChart');
+      const chartImage = chartCanvas.toDataURL('image/png', 1.0);
+      const chartMaxWidth = pageWidth - margin * 2;
+      const chartMaxHeight = 330;
+      const chartRatio = chartCanvas.width / chartCanvas.height;
+      let chartWidth = chartMaxWidth;
+      let chartHeight = chartWidth / chartRatio;
+
+      if (chartHeight > chartMaxHeight) {
+        chartHeight = chartMaxHeight;
+        chartWidth = chartHeight * chartRatio;
+      }
+
+      const chartX = (pageWidth - chartWidth) / 2;
+      doc.addImage(chartImage, 'PNG', chartX, y, chartWidth, chartHeight);
+      y += chartHeight + 24;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.text('Valda värden', margin, y);
+      y += 18;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      areas.forEach((area, index) => {
+        const line = `${area}: ${state.scores[index]}`;
+        const wrapped = doc.splitTextToSize(line, pageWidth - margin * 2);
+
+        if (y + wrapped.length * 16 > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+        }
+
+        doc.text(wrapped, margin, y);
+        y += wrapped.length * 16 + 6;
+      });
+
+      const datePart = now.toISOString().slice(0, 10);
+      doc.save(`spindeldiagram-${safeCustomerName}-${datePart}.pdf`);
+    }
+
+    function showResults() {
+      resultCustomer.textContent = `Kund: ${state.customerName}`;
+      introView.classList.add('hidden');
+      wizardView.classList.add('hidden');
+      resultView.classList.remove('hidden');
+      renderSummary();
+      renderChart();
+    }
+
+    function renderSummary() {
+      summaryList.innerHTML = '';
+
+      areas.forEach((area, index) => {
+        const item = document.createElement('li');
+        item.className = 'summary-item';
+        item.innerHTML = `
+          <span class="summary-name">${area}</span>
+          <span class="summary-value">${state.scores[index]}</span>
+        `;
+        summaryList.appendChild(item);
+      });
+    }
+
+    function renderChart() {
+      const ctx = document.getElementById('radarChart');
+
+      if (radarChart) {
+        radarChart.destroy();
+      }
+
+      radarChart = new Chart(ctx, {
+        type: 'radar',
+        plugins: [categoryRingPlugin],
+        data: {
+          labels: areas,
+          datasets: [{
+            label: 'Självskattning',
+            data: state.scores,
+            fill: true,
+            backgroundColor: 'rgba(255, 179, 0, 0.28)',
+            borderColor: '#526664',
+            borderWidth: 2,
+            pointBackgroundColor: '#ffb300',
+            pointBorderColor: '#1E2022',
+            pointHoverBackgroundColor: '#ffffff',
+            pointHoverBorderColor: '#526664',
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          layout: {
+            padding: {
+              top: 62,
+              right: 72,
+              bottom: 62,
+              left: 72
+            }
+          },
+          plugins: {
+            categoryRing: {
+              enabled: true,
+              categories: categoryGroups
+            },
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => `${context.label}: ${context.raw}`
+              }
+            }
+          },
+          scales: {
+            r: {
+              min: 0,
+              max: 10,
+              ticks: {
+                stepSize: 1,
+                backdropColor: 'transparent',
+                color: '#64666A'
+              },
+              grid: {
+                color: 'rgba(82, 102, 100, 0.18)'
+              },
+              angleLines: {
+                color: 'rgba(82, 102, 100, 0.18)'
+              },
+              pointLabels: {
+                display: false,
+                font: {
+                  size: 10,
+                  weight: '600'
+                },
+                padding: 8
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function restart() {
+      state.customerName = '';
+      state.currentStep = 0;
+      state.scores = new Array(areas.length).fill(null);
+      resultView.classList.add('hidden');
+      wizardView.classList.add('hidden');
+      introView.classList.remove('hidden');
+      customerNameInput.value = '';
+      resultCustomer.textContent = '';
+      renderStep();
+    }
+
+    init();
+  </script>
+</body>
+</html>
