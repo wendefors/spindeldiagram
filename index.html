@@ -426,16 +426,28 @@
 
     /* Mobilanpassning för bättre läsbarhet och klickytor. */
     @media (max-width: 720px) {
+      body { padding: 12px; }
       .card { padding: 24px; }
       .logo-wrap {
         top: 16px;
         right: 18px;
       }
       .logo-img { height: 22px; }
+      .title {
+        font-size: clamp(1.35rem, 7vw, 1.9rem);
+        line-height: 1.15;
+        overflow-wrap: anywhere;
+      }
+      #areaTitle { padding-right: 70px; }
+      .summary-category-name,
+      .summary-subname {
+        overflow-wrap: anywhere;
+      }
       .score-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .chart-panel {
-        min-height: 360px;
-        padding: 16px;
+        min-height: 320px;
+        padding: 12px;
+        overflow: hidden;
       }
       .actions { flex-direction: column-reverse; }
       .actions .btn { width: 100%; }
@@ -629,22 +641,23 @@
         const centerY = scale.yCenter;
         const angleStep = (Math.PI * 2) / pointCount;
         const angleOffset = -Math.PI / 2;
+        const isMobile = Boolean(options && options.mobile);
         const ringInner = scale.drawingArea;
         const ringOuter = ringInner + 24;
         const sectorOuter = ringInner;
-        const labelRadius = ringOuter + 20;
-        const labelLineHeight = 14;
+        const labelRadius = ringOuter + (isMobile ? 8 : 20);
+        const labelLineHeight = isMobile ? 12 : 14;
 
         // Lokal hjälpfunktion som placerar kategorinamn runt ringen.
         const drawLabel = (text, angle) => {
           const x = centerX + Math.cos(angle) * labelRadius;
           const y = centerY + Math.sin(angle) * labelRadius;
-          const lines = wrapText(text, 18);
+          const lines = wrapText(text, isMobile ? 14 : 18);
           const textBlockHeight = lines.length * labelLineHeight;
 
           // Typografi och färg för kategorietiketter.
           ctx.fillStyle = '#1E2022';
-          ctx.font = '700 11px Arial';
+          ctx.font = isMobile ? '700 10px Arial' : '700 11px Arial';
           ctx.textBaseline = 'middle';
 
           // Justera textankare beroende på var runt cirkeln etiketten hamnar.
@@ -1111,6 +1124,7 @@
     // Skapar/uppdaterar radardiagrammet med 9 datapunkter.
     function renderChart() {
       const ctx = document.getElementById('radarChart');
+      const isMobile = window.matchMedia('(max-width: 720px)').matches;
 
       // Rensa tidigare diagraminstans för att undvika dubletter/minnesläckor.
       if (radarChart) {
@@ -1142,16 +1156,17 @@
           animation: false,
           layout: {
             padding: {
-              top: 62,
-              right: 72,
-              bottom: 62,
-              left: 72
+              top: isMobile ? 34 : 62,
+              right: isMobile ? 34 : 72,
+              bottom: isMobile ? 34 : 62,
+              left: isMobile ? 34 : 72
             }
           },
           plugins: {
             categoryRing: {
               enabled: true,
-              categories: categoryGroups
+              categories: categoryGroups,
+              mobile: isMobile
             },
             legend: {
               display: false
