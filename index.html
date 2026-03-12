@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <style>
+    /* Designvariabler (färger, skuggor, radier) för hela gränssnittet. */
     :root {
       --xlent-yellow: #ffb300;
       --sage: #A3B6B4;
@@ -21,8 +22,10 @@
       --radius-sm: 10px;
     }
 
+    /* Gör att padding/border räknas in i elementens totala bredd/höjd. */
     * { box-sizing: border-box; }
 
+    /* Grundlayout för sidan. */
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -37,11 +40,13 @@
       padding: 24px;
     }
 
+    /* Yttre behållare som begränsar innehållets maxbredd. */
     .app-shell {
       width: 100%;
       max-width: 760px;
     }
 
+    /* Kortkomponent som används för intro, frågeflöde och resultat. */
     .card {
       background: var(--white);
       border-radius: var(--radius-lg);
@@ -50,6 +55,7 @@
       border: 1px solid rgba(82, 102, 100, 0.10);
     }
 
+    /* Visuell accent längst upp i varje kort. */
     .brand-bar {
       width: 72px;
       height: 8px;
@@ -58,6 +64,7 @@
       margin-bottom: 24px;
     }
 
+    /* Mindre steg-/statusrubrik över huvudrubriken. */
     .step-label {
       font-size: 0.95rem;
       color: var(--stone);
@@ -65,12 +72,14 @@
       font-weight: 700;
     }
 
+    /* Huvudrubrik i varje vy. */
     .title {
       font-size: clamp(1.8rem, 4vw, 2.5rem);
       line-height: 1.1;
       margin: 0 0 10px;
     }
 
+    /* Brödtext/beskrivningstext i vyerna. */
     .description {
       margin: 0 0 28px;
       color: var(--stone);
@@ -78,10 +87,12 @@
       max-width: none;
     }
 
+    /* Progressbar för frågeflödet. */
     .progress-wrap {
       margin-bottom: 28px;
     }
 
+    /* Bakgrundsspår för progressbar. */
     .progress-track {
       width: 100%;
       height: 10px;
@@ -90,6 +101,7 @@
       overflow: hidden;
     }
 
+    /* Fyllnadsgrad i progressbar. */
     .progress-fill {
       height: 100%;
       width: 0;
@@ -98,6 +110,7 @@
       transition: width 220ms ease;
     }
 
+    /* Grid för poängknappar 1-10. */
     .score-grid {
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -105,6 +118,7 @@
       margin: 18px 0 8px;
     }
 
+    /* Label till kundnamnsfält på introvyn. */
     .input-label {
       display: block;
       font-size: 0.92rem;
@@ -113,6 +127,7 @@
       margin-bottom: 8px;
     }
 
+    /* Textinput för kundnamn. */
     .text-input {
       width: 100%;
       border: 1px solid rgba(82, 102, 100, 0.25);
@@ -124,12 +139,14 @@
       margin-bottom: 14px;
     }
 
+    /* Fokusstil för input för bättre tillgänglighet. */
     .text-input:focus {
       outline: none;
       border-color: var(--forest);
       box-shadow: 0 0 0 3px rgba(163, 182, 180, 0.35);
     }
 
+    /* Gemensam stil för poängknappar. */
     .score-btn {
       appearance: none;
       border: 1px solid rgba(82, 102, 100, 0.20);
@@ -143,18 +160,21 @@
       transition: all 160ms ease;
     }
 
+    /* Hovereffekt för poängknappar. */
     .score-btn:hover {
       transform: translateY(-1px);
       border-color: var(--forest);
       box-shadow: 0 8px 20px rgba(82, 102, 100, 0.10);
     }
 
+    /* Markerad poängknapp. */
     .score-btn.selected {
       background: var(--xlent-yellow);
       border-color: var(--xlent-yellow);
       color: var(--ink);
     }
 
+    /* Rad som visar valt värde för aktuellt steg. */
     .selected-score {
       min-height: 24px;
       margin-top: 14px;
@@ -162,6 +182,7 @@
       color: var(--forest);
     }
 
+    /* Knapprad i respektive vy. */
     .actions {
       display: flex;
       justify-content: space-between;
@@ -169,6 +190,7 @@
       margin-top: 32px;
     }
 
+    /* Basstil för samtliga knappar. */
     .btn {
       appearance: none;
       border: none;
@@ -188,25 +210,30 @@
       box-shadow: none;
     }
 
+    /* Sekundär knappstil. */
     .btn-secondary {
       background: var(--mist);
       color: var(--ink);
     }
 
+    /* Primär knappstil (inte aktivt använd just nu, kvar för flexibilitet). */
     .btn-primary {
       background: var(--ink);
       color: var(--white);
       box-shadow: 0 12px 24px rgba(30, 32, 34, 0.18);
     }
 
+    /* Accentknapp i XLENT-gul. */
     .btn-accent {
       background: var(--xlent-yellow);
       color: var(--ink);
       box-shadow: 0 12px 24px rgba(255, 179, 0, 0.28);
     }
 
+    /* Hjälpklass för att dölja vyer. */
     .hidden { display: none; }
 
+    /* Layout för resultatsektionen: diagram + sammanställning. */
     .result-layout {
       display: grid;
       grid-template-columns: 1fr;
@@ -214,6 +241,7 @@
       align-items: stretch;
     }
 
+    /* Panelen som innehåller radardiagrammet. */
     .chart-panel {
       background: linear-gradient(180deg, rgba(240, 242, 239, 0.55), rgba(255,255,255,1));
       border: 1px solid rgba(82, 102, 100, 0.12);
@@ -226,6 +254,7 @@
       overflow: visible;
     }
 
+    /* Panel med textuell sammanställning av resultat. */
     .summary-panel {
       background: var(--mist);
       border-radius: 22px;
@@ -233,11 +262,13 @@
       width: 100%;
     }
 
+    /* Rubrik för sammanställningspanelen. */
     .summary-title {
       margin: 0 0 16px;
       font-size: 1.15rem;
     }
 
+    /* Visar valt kundnamn på resultatsidan. */
     .result-customer {
       margin: 0 0 20px;
       font-size: 1rem;
@@ -245,6 +276,7 @@
       color: var(--forest);
     }
 
+    /* Yttre lista för kategorikort i sammanställningen. */
     .summary-list {
       list-style: none;
       margin: 0;
@@ -253,23 +285,32 @@
       gap: 12px;
     }
 
-    .summary-item {
+    /* Ett kategorikort med medelvärde + underfrågor. */
+    .summary-category {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 14px;
+      border: 1px solid rgba(82, 102, 100, 0.16);
+    }
+
+    /* Övre rad i kategorikort (namn + medelvärde). */
+    .summary-category-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      background: var(--white);
-      border-radius: 14px;
-      padding: 14px 16px;
+      gap: 10px;
+      padding: 2px 2px 10px;
     }
 
-    .summary-name {
+    /* Namn på kategori i sammanställningen. */
+    .summary-category-name {
       font-weight: 700;
       line-height: 1.3;
       font-size: 0.95rem;
     }
 
-    .summary-value {
+    /* Badge med kategorins medelvärde. */
+    .summary-category-value {
       min-width: 48px;
       text-align: center;
       background: var(--xlent-yellow);
@@ -280,11 +321,53 @@
       font-size: 0.92rem;
     }
 
+    /* Underraderna (frågor) inom varje kategori. */
+    .summary-sublist {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    /* En enskild frågerad i kategorin. */
+    .summary-subitem {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(240, 242, 239, 0.7);
+      border-radius: 10px;
+      padding: 9px 10px;
+    }
+
+    /* Frågetext i en underrad. */
+    .summary-subname {
+      font-size: 0.88rem;
+      line-height: 1.25;
+      color: var(--ink);
+    }
+
+    /* Värdebadge per fråga i en underrad. */
+    .summary-subvalue {
+      min-width: 38px;
+      text-align: center;
+      border-radius: 999px;
+      padding: 5px 8px;
+      background: var(--white);
+      border: 1px solid rgba(82, 102, 100, 0.22);
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* Mindre knappar i nedre actions på resultatsidan. */
     .restart-wrap .btn {
       font-size: 0.9rem;
       padding: 12px 18px;
     }
 
+    /* Behållare för PDF-/omstartsknappar. */
     .restart-wrap {
       margin-top: 28px;
       display: flex;
@@ -292,10 +375,12 @@
       gap: 12px;
     }
 
+    /* Desktopjustering: bredare innehåll på större skärmar. */
     @media (min-width: 1024px) {
       .app-shell { max-width: 980px; }
     }
 
+    /* Mobilanpassning för bättre läsbarhet och klickytor. */
     @media (max-width: 720px) {
       .card { padding: 24px; }
       .score-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -315,6 +400,7 @@
 </head>
 <body>
   <main class="app-shell">
+    <!-- Introvy: här fyller användaren i kundnamn innan skattningen startar. -->
     <section class="card" id="introView">
       <div class="brand-bar"></div>
       <div class="step-label">Förberedelse</div>
@@ -327,6 +413,7 @@
       </div>
     </section>
 
+    <!-- Wizardvy: fråga-för-fråga där användaren sätter poäng 1-10. -->
     <section class="card hidden" id="wizardView">
       <div class="brand-bar"></div>
       <div class="step-label" id="stepLabel">Steg 1 av 9</div>
@@ -346,6 +433,7 @@
       </div>
     </section>
 
+    <!-- Resultatvy: diagram + sammanställning + export/omstart. -->
     <section class="card hidden" id="resultView">
       <div class="brand-bar"></div>
       <div class="step-label">Resultat</div>
@@ -371,8 +459,10 @@
   </main>
 
   <script>
+    // Kort fördröjning när ett värde väljs så användaren hinner se markeringen.
     const AUTO_ADVANCE_DELAY_MS = 500;
 
+    // De nio frågor som användaren skattar (1-10).
     const areas = [
       'Strategisk tydlighet',
       'Samstämmigt ledarskap',
@@ -384,6 +474,9 @@
       'Förändringsledningsförmåga',
       'Transformationsvana'
     ];
+
+    // Kategorier som grupperar frågorna i resultat och visualisering.
+    // startIndex/endIndex pekar på vilka frågor i `areas` som tillhör kategorin.
     const categoryGroups = [
       {
         name: 'Strategisk inriktning',
@@ -411,6 +504,7 @@
       }
     ];
 
+    // Hjälpfunktion: bryter en text i flera rader utifrån max antal tecken per rad.
     function wrapText(text, maxCharsPerLine = 20) {
       const words = text.split(' ');
       const lines = [];
@@ -430,6 +524,7 @@
       return lines;
     }
 
+    // Hjälpfunktion: omvandlar hex-färg (t.ex. #ffb300) till rgba med vald transparens.
     function hexToRgba(hex, alpha) {
       const cleanHex = hex.replace('#', '');
       const fullHex = cleanHex.length === 3
@@ -441,17 +536,24 @@
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
+    // Egen Chart.js-plugin som ritar:
+    // 1) kategoriring
+    // 2) transparenta kategorisektorer i diagramytan
+    // 3) etiketter för kategorierna runt diagrammet
     const categoryRingPlugin = {
       id: 'categoryRing',
       afterDraw(chart, args, options) {
+        // Avbryt direkt om pluginet är avstängt.
         if (!options || !options.enabled) return;
 
+        // Hämta radarskalans geometri och datagrund.
         const scale = chart.scales.r;
         const labels = chart.data.labels || [];
         const categories = options.categories || [];
         const pointCount = labels.length;
         if (!scale || !pointCount || !categories.length) return;
 
+        // Grundvärden för canvas-ritning och avstånd.
         const { ctx, width, height } = chart;
         const centerX = scale.xCenter;
         const centerY = scale.yCenter;
@@ -463,16 +565,19 @@
         const labelRadius = ringOuter + 20;
         const labelLineHeight = 14;
 
+        // Lokal hjälpfunktion som placerar kategorinamn runt ringen.
         const drawLabel = (text, angle) => {
           const x = centerX + Math.cos(angle) * labelRadius;
           const y = centerY + Math.sin(angle) * labelRadius;
           const lines = wrapText(text, 18);
           const textBlockHeight = lines.length * labelLineHeight;
 
+          // Typografi och färg för kategorietiketter.
           ctx.fillStyle = '#1E2022';
           ctx.font = '700 11px Arial';
           ctx.textBaseline = 'middle';
 
+          // Justera textankare beroende på var runt cirkeln etiketten hamnar.
           const cosine = Math.cos(angle);
           if (cosine > 0.32) {
             ctx.textAlign = 'left';
@@ -488,11 +593,12 @@
           });
         };
 
+        // destination-over: allt som ritas här hamnar bakom själva diagrammet
+        // (så datapunkter, linjer och grid förblir läsbara).
         ctx.save();
         ctx.globalCompositeOperation = 'destination-over';
 
-        // Draw separators first while in destination-over mode, so they stay visible
-        // on top of category fills/rings but still behind the chart content.
+        // Samla alla kategori-gränsvinklar och rita tydliga separatorlinjer.
         const separatorAngles = new Set();
         categories.forEach((category) => {
           separatorAngles.add((category.startIndex - 0.5).toFixed(3));
@@ -511,6 +617,7 @@
           ctx.stroke();
         });
 
+        // Rita först transparent sektorfyllning (tårtbitar), sedan den yttre färgringen.
         categories.forEach((category) => {
           const startAngle = angleOffset + ((category.startIndex - 0.5) * angleStep);
           const endAngle = angleOffset + ((category.endIndex + 0.5) * angleStep);
@@ -535,6 +642,7 @@
 
         ctx.restore();
 
+        // Rita kategorinamn sist så texten blir skarp och synlig.
         ctx.save();
         categories.forEach((category) => {
           const startAngle = angleOffset + ((category.startIndex - 0.5) * angleStep);
@@ -545,6 +653,9 @@
         ctx.restore();
       }
     };
+
+    // Beskrivningstexter per fråga:
+    // question = frågetext, low = tolkning vid 1, high = tolkning vid 10.
     const areaDescriptions = [
       {
         question: 'Tydlig affärsstrategi för digitalisering, AI och systemförändringar.',
@@ -593,12 +704,14 @@
       }
     ];
 
+    // Applikationens tillstånd under körning.
     const state = {
       customerName: '',
       currentStep: 0,
       scores: new Array(areas.length).fill(null)
     };
 
+    // Referenser till HTML-element som uppdateras från JavaScript.
     const introView = document.getElementById('introView');
     const wizardView = document.getElementById('wizardView');
     const resultView = document.getElementById('resultView');
@@ -616,14 +729,16 @@
     const summaryList = document.getElementById('summaryList');
     const resultCustomer = document.getElementById('resultCustomer');
 
+    // Referens till aktiv Chart.js-instans så den kan återanvändas/destroyas.
     let radarChart;
 
+    // Startar appen: bygger knappar och kopplar event.
     function init() {
       createScoreButtons();
       bindEvents();
-      renderStep();
     }
 
+    // Skapar knapparna 1-10 en gång och kopplar varje knapp till selectScore.
     function createScoreButtons() {
       scoreGrid.innerHTML = '';
       for (let score = 1; score <= 10; score++) {
@@ -637,6 +752,7 @@
       }
     }
 
+    // Kopplar alla användarhändelser.
     function bindEvents() {
       startBtn.addEventListener('click', startAssessment);
       customerNameInput.addEventListener('keydown', (event) => {
@@ -647,6 +763,7 @@
       restartBtn.addEventListener('click', restart);
     }
 
+    // Validerar kundnamn och går från introvyn till första frågan.
     function startAssessment() {
       const name = customerNameInput.value.trim();
       if (!name) {
@@ -663,12 +780,14 @@
       renderStep();
     }
 
+    // Sparar valt värde för aktuellt steg och går vidare automatiskt.
     function selectScore(score) {
       state.scores[state.currentStep] = score;
       updateScoreSelection();
       setTimeout(goNext, AUTO_ADVANCE_DELAY_MS);
     }
 
+    // Renderar aktuell fråga: rubrik, beskrivning, stegindikator och progress.
     function renderStep() {
       const currentArea = areas[state.currentStep];
       const currentDescription = areaDescriptions[state.currentStep];
@@ -684,6 +803,7 @@
       updateNavigationButtons();
     }
 
+    // Markerar vald knapp visuellt och uppdaterar hjälprad.
     function updateScoreSelection() {
       const selectedValue = state.scores[state.currentStep];
       const buttons = scoreGrid.querySelectorAll('.score-btn');
@@ -698,10 +818,12 @@
         : 'Inget värde valt ännu.';
     }
 
+    // Endast tillbaka-knappen behöver styras i detta flöde.
     function updateNavigationButtons() {
       backBtn.disabled = state.currentStep === 0;
     }
 
+    // Flyttar ett steg bakåt om möjligt.
     function goBack() {
       if (state.currentStep > 0) {
         state.currentStep -= 1;
@@ -709,6 +831,7 @@
       }
     }
 
+    // Flyttar till nästa fråga eller visar resultat när sista frågan är klar.
     function goNext() {
       if (state.scores[state.currentStep] === null) return;
 
@@ -720,6 +843,28 @@
       }
     }
 
+    // Beräknar återanvändbar kategoridata:
+    // vilka frågor som ingår och kategorins medelvärde.
+    function getCategorySummaries() {
+      return categoryGroups.map((category) => {
+        const indexes = [];
+        for (let index = category.startIndex; index <= category.endIndex; index += 1) {
+          indexes.push(index);
+        }
+
+        const values = indexes.map((index) => state.scores[index]);
+        const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+
+        return {
+          category,
+          indexes,
+          average
+        };
+      });
+    }
+
+    // Genererar och laddar ner PDF med:
+    // kundnamn, diagram och kategoribaserad sammanställning av svaren.
     function downloadPdf() {
       if (state.scores.some((score) => score === null)) {
         alert('Sätt ett värde för alla områden innan du laddar ner PDF.');
@@ -739,6 +884,8 @@
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 46;
       let y = margin;
+
+      // Kundnamn saneras för att fungera säkert i filnamn.
       const safeCustomerName = (state.customerName || 'kund')
         .toLowerCase()
         .normalize('NFD')
@@ -783,25 +930,45 @@
       doc.text('Valda värden', margin, y);
       y += 18;
 
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(12);
-      areas.forEach((area, index) => {
-        const line = `${area}: ${state.scores[index]}`;
-        const wrapped = doc.splitTextToSize(line, pageWidth - margin * 2);
-
-        if (y + wrapped.length * 16 > pageHeight - margin) {
+      // Hjälpfunktion för säker sidbrytning innan text skrivs.
+      const ensurePdfSpace = (heightNeeded) => {
+        if (y + heightNeeded > pageHeight - margin) {
           doc.addPage();
           y = margin;
         }
+      };
 
-        doc.text(wrapped, margin, y);
-        y += wrapped.length * 16 + 6;
+      getCategorySummaries().forEach(({ category, indexes, average }) => {
+        const averageText = average.toFixed(1);
+        const categoryLine = `${category.name}: ${averageText}`;
+        const wrappedCategory = doc.splitTextToSize(categoryLine, pageWidth - margin * 2);
+        const categoryHeight = wrappedCategory.length * 15 + 2;
+        ensurePdfSpace(categoryHeight);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.text(wrappedCategory, margin, y);
+        y += categoryHeight;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        indexes.forEach((index) => {
+          const line = `- ${areas[index]}: ${state.scores[index]}`;
+          const wrapped = doc.splitTextToSize(line, pageWidth - margin * 2 - 10);
+          const lineHeight = wrapped.length * 14 + 2;
+          ensurePdfSpace(lineHeight);
+          doc.text(wrapped, margin + 10, y);
+          y += lineHeight;
+        });
+
+        y += 6;
       });
 
       const datePart = now.toISOString().slice(0, 10);
       doc.save(`spindeldiagram-${safeCustomerName}-${datePart}.pdf`);
     }
 
+    // Växlar till resultatsidan och renderar både lista och diagram.
     function showResults() {
       resultCustomer.textContent = `Kund: ${state.customerName}`;
       introView.classList.add('hidden');
@@ -811,23 +978,61 @@
       renderChart();
     }
 
+    // Renderar sammanställning per kategori:
+    // kategorins medelvärde + underliggande frågor med enskilda värden.
     function renderSummary() {
       summaryList.innerHTML = '';
 
-      areas.forEach((area, index) => {
+      getCategorySummaries().forEach(({ category, indexes, average }) => {
         const item = document.createElement('li');
-        item.className = 'summary-item';
-        item.innerHTML = `
-          <span class="summary-name">${area}</span>
-          <span class="summary-value">${state.scores[index]}</span>
-        `;
+        item.className = 'summary-category';
+        item.style.borderLeft = `5px solid ${category.color}`;
+
+        const head = document.createElement('div');
+        head.className = 'summary-category-head';
+
+        const categoryName = document.createElement('span');
+        categoryName.className = 'summary-category-name';
+        categoryName.textContent = category.name;
+
+        const categoryValue = document.createElement('span');
+        categoryValue.className = 'summary-category-value';
+        categoryValue.textContent = average.toFixed(1);
+
+        head.appendChild(categoryName);
+        head.appendChild(categoryValue);
+
+        const sublist = document.createElement('ul');
+        sublist.className = 'summary-sublist';
+
+        indexes.forEach((index) => {
+          const subitem = document.createElement('li');
+          subitem.className = 'summary-subitem';
+
+          const subname = document.createElement('span');
+          subname.className = 'summary-subname';
+          subname.textContent = areas[index];
+
+          const subvalue = document.createElement('span');
+          subvalue.className = 'summary-subvalue';
+          subvalue.textContent = String(state.scores[index]);
+
+          subitem.appendChild(subname);
+          subitem.appendChild(subvalue);
+          sublist.appendChild(subitem);
+        });
+
+        item.appendChild(head);
+        item.appendChild(sublist);
         summaryList.appendChild(item);
       });
     }
 
+    // Skapar/uppdaterar radardiagrammet med 9 datapunkter.
     function renderChart() {
       const ctx = document.getElementById('radarChart');
 
+      // Rensa tidigare diagraminstans för att undvika dubletter/minnesläckor.
       if (radarChart) {
         radarChart.destroy();
       }
@@ -906,6 +1111,7 @@
       });
     }
 
+    // Återställer hela flödet till startläge.
     function restart() {
       state.customerName = '';
       state.currentStep = 0;
@@ -915,9 +1121,9 @@
       introView.classList.remove('hidden');
       customerNameInput.value = '';
       resultCustomer.textContent = '';
-      renderStep();
     }
 
+    // Kör initialisering när skriptet laddats.
     init();
   </script>
 </body>
