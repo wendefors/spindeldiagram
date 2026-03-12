@@ -48,11 +48,42 @@
 
     /* Kortkomponent som används för intro, frågeflöde och resultat. */
     .card {
+      position: relative;
       background: var(--white);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow);
       padding: 32px;
       border: 1px solid rgba(82, 102, 100, 0.10);
+    }
+
+    /* Loggabehållare: visas uppe till höger i varje kort. */
+    .logo-wrap {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      min-width: 88px;
+    }
+
+    /* Loggabild med kontrollerad storlek. */
+    .logo-img {
+      display: block;
+      width: auto;
+      height: 28px;
+      max-width: 170px;
+      object-fit: contain;
+    }
+
+    /* Fallback om bildfil saknas lokalt. */
+    .logo-fallback {
+      display: none;
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--ink);
     }
 
     /* Visuell accent längst upp i varje kort. */
@@ -383,6 +414,11 @@
     /* Mobilanpassning för bättre läsbarhet och klickytor. */
     @media (max-width: 720px) {
       .card { padding: 24px; }
+      .logo-wrap {
+        top: 16px;
+        right: 18px;
+      }
+      .logo-img { height: 22px; }
       .score-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .chart-panel {
         min-height: 360px;
@@ -402,6 +438,15 @@
   <main class="app-shell">
     <!-- Introvy: här fyller användaren i kundnamn innan skattningen startar. -->
     <section class="card" id="introView">
+      <div class="logo-wrap">
+        <img
+          class="logo-img"
+          src="./xlent-logo.png"
+          alt="XLENT"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"
+        />
+        <span class="logo-fallback">XLENT</span>
+      </div>
       <div class="brand-bar"></div>
       <div class="step-label">Förberedelse</div>
       <h1 class="title">Digitaliseringstransformation</h1>
@@ -415,6 +460,15 @@
 
     <!-- Wizardvy: fråga-för-fråga där användaren sätter poäng 1-10. -->
     <section class="card hidden" id="wizardView">
+      <div class="logo-wrap">
+        <img
+          class="logo-img"
+          src="./xlent-logo.png"
+          alt="XLENT"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"
+        />
+        <span class="logo-fallback">XLENT</span>
+      </div>
       <div class="brand-bar"></div>
       <div class="step-label" id="stepLabel">Steg 1 av 9</div>
       <div class="progress-wrap">
@@ -435,6 +489,15 @@
 
     <!-- Resultatvy: diagram + sammanställning + export/omstart. -->
     <section class="card hidden" id="resultView">
+      <div class="logo-wrap">
+        <img
+          class="logo-img"
+          src="./xlent-logo.png"
+          alt="XLENT"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';"
+        />
+        <span class="logo-fallback">XLENT</span>
+      </div>
       <div class="brand-bar"></div>
       <div class="step-label">Resultat</div>
       <h1 class="title">Digitaliseringstransformation</h1>
@@ -559,9 +622,9 @@
         const centerY = scale.yCenter;
         const angleStep = (Math.PI * 2) / pointCount;
         const angleOffset = -Math.PI / 2;
-        const ringInner = scale.drawingArea + 8;
+        const ringInner = scale.drawingArea;
         const ringOuter = ringInner + 24;
-        const sectorOuter = scale.drawingArea;
+        const sectorOuter = ringInner;
         const labelRadius = ringOuter + 20;
         const labelLineHeight = 14;
 
@@ -635,9 +698,6 @@
           ctx.closePath();
           ctx.fillStyle = category.color;
           ctx.fill();
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
         });
 
         ctx.restore();
@@ -1085,11 +1145,12 @@
           scales: {
             r: {
               min: 0,
-              max: 10,
+              max: 11,
               ticks: {
                 stepSize: 1,
                 backdropColor: 'transparent',
-                color: '#64666A'
+                color: '#64666A',
+                callback: (value) => (value === 11 ? '' : value)
               },
               grid: {
                 color: 'rgba(82, 102, 100, 0.18)'
